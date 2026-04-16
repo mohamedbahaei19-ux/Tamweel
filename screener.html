@@ -886,6 +886,31 @@ Respond ONLY in valid JSON with no markdown or extra text:
 
     let ai = {q11:5,q14:8,q18:5,q19:4,q20:4,assessment:'AI assessment unavailable — please score these fields manually.'};
 
+   // Send to Make webhook
+await fetch('https://hook.eu1.make.com/3e3ccdsuwv9xitrdqdcsfft9aintcf3i', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    bizName: data.q1,
+    sector: sectorLabel,
+    location: data.q3,
+    employees: data.q4,
+    revenue: revenueLabel,
+    profitable: data.q6,
+    margin: marginLabel,
+    trend: data.q8,
+    financials: data.q9,
+    capital: capitalLabel,
+    equity: equityLabel,
+    useOfFunds: data.q12,
+    priorInvestment: data.q13,
+    founderName: data.q14,
+    yearsRunning: yearsLabel,
+    advantage: data.q18,
+    risk: data.q19,
+    whyNow: data.q20,
+  })
+});
     try {
       const res  = await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
