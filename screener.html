@@ -592,6 +592,9 @@ const S1 = ({d,sd,onBack,onNext}) => {
       <F num="Q1" label="Business name and legal structure">
         <input type="text" value={d.q1||''} onChange={s('q1')} placeholder="e.g. Nile Foods LLC"/>
       </F>
+      <F num="" label="Your email address" hint="We'll use this to contact you about your application.">
+        <input type="email" value={d.email||''} onChange={s('email')} placeholder="e.g. name@company.com"/>
+      </F>
       <F num="Q2" label="Sector">
         <Sel val={d.q2} onChange={v=>sd(p=>({...p,q2:v,q2other:v!=='Other'?'':p.q2other}))} placeholder="Select your sector..." opts={[
           {v:'Tech / Software',       l:'Tech / Software'},
