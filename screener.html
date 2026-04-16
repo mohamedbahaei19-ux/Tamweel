@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tamweel — Investment Screener</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #F7F5F3;
+    color: #1C1C1C;
+    min-height: 100vh;
+  }
+
+  :root {
+    --wine: #6B1D2E;
+    --wine-dark: #4E1520;
+    --wine-light: #8C2438;
+    --wine-pale: #F9F0F2;
+    --wine-border: #E8C8CE;
+    --white: #FFFFFF;
+    --off: #F7F5F3;
+    --border: #E2DDD8;
+    --text: #1C1C1C;
+    --muted: #6B6B6B;
+    --dim: #A0A0A0;
+    --green: #1A6B3C;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--wine);
+    letter-spacing: -0.02em;
+  }
+
+  .logo span {
+    font-weight: 300;
+    color: var(--muted);
+    font-size: 13px;
+    margin-left: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  .step-counter {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    height: 2px;
+    background: var(--border);
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--wine);
+    transition: width 0.4s ease;
+  }
+
+  /* ── Layout ── */
+  .page-wrap {
+    min-height: calc(100vh - 62px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 56px 20px 80px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--white);
+    width: 100%;
+    max-width: 620px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+  }
+
+  /* ── Card header ── */
+  .card-head {
+    padding: 36px 44px 30px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--wine);
+    margin-bottom: 10px;
+  }
+
+  .card-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .card-desc {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  /* ── Card body ── */
+  .card-body {
+    padding: 36px 44px;
+  }
+
+  /* ── Card footer ── */
+  .card-foot {
+    padding: 20px 44px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FAFAF8;
+  }
+
+  /* ── Dots ── */
+  .dots {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.25s;
+  }
+  .dot.done { background: var(--wine-border); }
+  .dot.active { background: var(--wine); width: 18px; border-radius: 4px; }
+
+  /* ── Buttons ── */
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 11px 28px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.18s;
+    line-height: 1;
+  }
+
+  .btn-back {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-back:hover { border-color: var(--muted); color: var(--text); }
+
+  .btn-next {
+    background: var(--wine);
+    color: var(--white);
+  }
+  .btn-next:hover { background: var(--wine-dark); }
+  .btn-next:disabled { background: var(--border); color: var(--dim); cursor: not-allowed; }
+
+  .btn-submit {
+    background: var(--wine);
+    color: var(--white);
+  }
+  .btn-submit:hover { background: var(--wine-dark); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Questions ── */
+  .question { margin-bottom: 24px; }
+  .question:last-child { margin-bottom: 0; }
+
+  .q-label {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-bottom: 8px;
+  }
+  .q-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--wine);
+    letter-spacing: 0.08em;
+    background: var(--wine-pale);
+    border: 1px solid var(--wine-border);
+    padding: 2px 7px;
+    flex-shrink: 0;
+  }
+  .q-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .q-hint {
+    font-size: 12px;
+    color: var(--dim);
+    margin-top: 5px;
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* ── Inputs ── */
+  select {
+    width: 100%;
+    background: var(--white);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 11px 36px 11px 14px;
+    outline: none;
+    transition: border-color 0.18s;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 0;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B1D2E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  select:focus { border-color: var(--wine); }
+  select option { color: var(--text); background: white; }
+  select option[value=''] { color: var(--dim); }
+
+  input[type=text], input[type=number], textarea {
+    width: 100%;
+    background: var(--white);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.18s;
+    appearance: none;
+    border-radius: 0;
+  }
+  input:focus, textarea:focus {
+    border-color: var(--wine);
+  }
+  input::placeholder, textarea::placeholder { color: var(--dim); font-weight: 300; }
+  textarea { resize: vertical; min-height: 92px; line-height: 1.65; }
+
+  /* ── Radio pills ── */
+  .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .radio-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    transition: all 0.15s;
+    user-select: none;
+    line-height: 1;
+  }
+  .radio-opt:hover { border-color: var(--wine-border); color: var(--text); }
+  .radio-opt.sel {
+    border-color: var(--wine);
+    background: var(--wine);
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  .radio-circle {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .radio-opt.sel .radio-circle::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: white;
+  }
+
+  /* ── Consent ── */
+  .consent-note {
+    background: var(--wine-pale);
+    border: 1px solid var(--wine-border);
+    border-left: 3px solid var(--wine);
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .consent-note strong { color: var(--text); font-weight: 600; }
+
+  .check-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .check-wrap:hover { border-color: var(--wine-border); background: var(--wine-pale); }
+  .check-wrap.on { border-color: var(--wine); background: var(--wine-pale); }
+
+  .checkbox {
+    width: 18px; height: 18px;
+    min-width: 18px;
+    border: 1.5px solid var(--border);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+  .check-wrap.on .checkbox {
+    background: var(--wine);
+    border-color: var(--wine);
+  }
+  .check-wrap.on .checkbox::after {
+    content: '';
+    width: 4px; height: 8px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg) translate(-1px, -1px);
+    display: block;
+  }
+  .check-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  /* ── File upload ── */
+  .file-zone {
+    border: 1px dashed var(--border);
+    background: var(--off);
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .file-zone:hover { border-color: var(--wine); background: var(--wine-pale); }
+  .file-zone input {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+    padding: 0; border: none;
+  }
+  .fz-icon { font-size: 20px; margin-bottom: 6px; }
+  .fz-main { font-size: 13px; color: var(--muted); }
+  .fz-main strong { color: var(--wine); font-weight: 600; }
+  .fz-sub { font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .fz-chosen { font-size: 12px; color: var(--green); margin-top: 8px; font-weight: 500; }
+
+  /* ── Results ── */
+  .result-hero {
+    text-align: center;
+    padding: 36px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .result-score {
+    font-size: 88px;
+    font-weight: 700;
+    color: var(--wine);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .result-denom {
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .verdict {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 6px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .v-strong { background: #EBF7F1; color: #1A6B3C; border: 1px solid #1A6B3C; }
+  .v-cond { background: var(--wine-pale); color: var(--wine); border: 1px solid var(--wine-border); }
+  .v-weak { background: #F5F5F5; color: #888; border: 1px solid #CCC; }
+  .v-pass { background: #FEF0F0; color: #AA2020; border: 1px solid #AA2020; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--wine);
+    margin-bottom: 12px;
+  }
+
+  .score-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #F0EDE8;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .sr-label { flex: 1; font-size: 13px; color: var(--muted); }
+  .sr-track { flex: 1.2; height: 2px; background: var(--border); }
+  .sr-fill { height: 100%; background: var(--wine); transition: width 0.7s ease; }
+  .sr-val { font-size: 12px; font-weight: 600; color: var(--wine); min-width: 40px; text-align: right; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0 20px; }
+
+  .ai-panel {
+    background: var(--wine);
+    padding: 22px 26px;
+    margin-top: 24px;
+  }
+  .ai-panel-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+  }
+  .ai-panel-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.85);
+    font-weight: 300;
+  }
+  .ai-panel-text strong { color: white; font-weight: 600; }
+
+  .loading-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 16px;
+    padding: 64px 0;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--wine);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 600px) {
+    .topbar { padding: 0 20px; }
+    .card-head, .card-body, .card-foot { padding-left: 24px; padding-right: 24px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+/* ── Scoring ── */
+const sQ5  = v => { const r=parseFloat(v); if(isNaN(r)||r<=0)return 0; if(r<1e6)return 2; if(r<3e6)return 4; if(r<6e6)return 6; if(r<10e6)return 8; return 10; };
+const sQ6  = v => v==='yes'?5:v==='no'?1:0;
+const sQ7  = v => { const m=parseFloat(v); if(isNaN(m))return 0; if(m<5)return 2; if(m<10)return 4; if(m<20)return 6; if(m<30)return 8; return 10; };
+const sQ8  = v => ({growing:10,stable:6,declining:2}[v]||0);
+const sQ10 = v => { const a=parseFloat(v); return(!isNaN(a)&&a>=500000&&a<=15000000)?5:1; };
+// Q12 use of funds free text
+const sQ12 = v => { if(!v||v.trim().length<20)return 2; if(v.trim().length<80)return 6; const kw=['%','expand','hire','capital','machin','market','stock','working','invest','salary','equipment']; return kw.filter(k=>v.toLowerCase().includes(k)).length>=2?10:6; };
+// Q15 years ranges
+const sQ15 = v => ({'under-1':1,'1-2':2,'2-4':3,'4-7':4,'over-7':5}[v]||0);
+const verdict = s => s>=80?{l:'Strong Proceed',c:'v-strong'}:s>=65?{l:'Conditional Proceed',c:'v-cond'}:s>=50?{l:'Weak — Review Carefully',c:'v-weak'}:{l:'Pass',c:'v-pass'};
+
+/* ── Field wrapper ── */
+const F = ({num, label, hint, children}) => (
+  <div className="question">
+    <div className="q-label">
+      {num && <span className="q-num">{num}</span>}
+      <span className="q-text">{label}</span>
+    </div>
+    {children}
+    {hint && <div className="q-hint">{hint}</div>}
+  </div>
+);
+
+/* ── Radio group ── */
+const Radio = ({opts, val, onChange}) => (
+  <div className="radio-group">
+    {opts.map(o => (
+      <div key={o.v} className={`radio-opt${val===o.v?' sel':''}`} onClick={()=>onChange(o.v)}>
+        <div className="radio-circle"/>
+        {o.l}
+      </div>
+    ))}
+  </div>
+);
+
+/* ── Select dropdown ── */
+const Sel = ({opts, val, onChange, placeholder}) => (
+  <select value={val||''} onChange={e=>onChange(e.target.value)}>
+    <option value="" disabled>{placeholder||'Select an option...'}</option>
+    {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+  </select>
+);
+
+
+const Dots = ({step, total}) => (
+  <div className="dots">
+    {Array.from({length:total}).map((_,i)=>(
+      <div key={i} className={`dot${i<step?' done':i===step?' active':''}`}/>
+    ))}
+  </div>
+);
+
+/* ── Steps ── */
+const S0 = ({d,sd,onNext}) => {
+  const on = d.consent===true;
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Before You Begin</div>
+      <div className="card-title">Equity Consent</div>
+      <div className="card-desc">Confirm you understand the nature of this process before proceeding.</div>
+    </div>
+    <div className="card-body">
+      <div className="consent-note">
+        Tamweel facilitates <strong>equity investment</strong> — you offer an ownership stake in your business in exchange for capital, not a loan.
+      </div>
+      <div className={`check-wrap${on?' on':''}`} onClick={()=>sd(d=>({...d,consent:!d.consent}))}>
+        <div className="checkbox"/>
+        <div className="check-text">I understand this process involves equity investment and wish to proceed.</div>
+      </div>
+    </div>
+    <div className="card-foot">
+      <Dots step={0} total={6}/>
+      <button className="btn btn-next" disabled={!on} onClick={onNext}>Continue →</button>
+    </div>
+  </>;
+};
+
+const S1 = ({d,sd,onBack,onNext}) => {
+  const s = k => e => sd(p=>({...p,[k]:e.target.value}));
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Section 01 — Business Basics</div>
+      <div className="card-title">Tell Us About Your Business</div>
+      <div className="card-desc">Basic information about your company and where you operate.</div>
+    </div>
+    <div className="card-body">
+      <F num="Q1" label="Business name and legal structure">
+        <input type="text" value={d.q1||''} onChange={s('q1')} placeholder="e.g. Nile Foods LLC"/>
+      </F>
+      <F num="Q2" label="Sector">
+        <Sel val={d.q2} onChange={v=>sd(p=>({...p,q2:v,q2other:v!=='Other'?'':p.q2other}))} placeholder="Select your sector..." opts={[
+          {v:'Tech / Software',       l:'Tech / Software'},
+          {v:'Consumer / Retail',     l:'Consumer / Retail'},
+          {v:'Manufacturing',         l:'Manufacturing'},
+          {v:'Food & Beverage',       l:'Food & Beverage'},
+          {v:'Healthcare',            l:'Healthcare'},
+          {v:'Fintech',               l:'Fintech'},
+          {v:'Real Estate',           l:'Real Estate'},
+          {v:'Other',                 l:'Other'},
+        ]}/>
+        {d.q2==='Other' && (
+          <input type="text" style={{marginTop:'8px'}} value={d.q2other||''} onChange={e=>sd(p=>({...p,q2other:e.target.value}))} placeholder="Please specify your sector..."/>
+        )}
+      </F>
+      <F num="" label="Brief description of what you do">
+        <textarea value={d.q2desc||''} onChange={e=>sd(p=>({...p,q2desc:e.target.value}))} placeholder="e.g. We manufacture and distribute premium date products across Cairo and Alexandria..."/>
+      </F>
+      <F num="Q3" label="Governorate / location of operations">
+        <input type="text" value={d.q3||''} onChange={s('q3')} placeholder="e.g. Cairo, Alexandria"/>
+      </F>
+      <F num="Q4" label="Number of full-time employees">
+        <input type="number" value={d.q4||''} onChange={s('q4')} placeholder="e.g. 12" min="1"/>
+      </F>
+    </div>
+    <div className="card-foot">
+      <button className="btn btn-back" onClick={onBack}>← Back</button>
+      <Dots step={1} total={6}/>
+      <button className="btn btn-next" onClick={onNext}>Continue →</button>
+    </div>
+  </>;
+};
+
+const S2 = ({d,sd,onBack,onNext}) => {
+  const s = k => e => sd(p=>({...p,[k]:e.target.value}));
+  const r = k => v => sd(p=>({...p,[k]:v}));
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Section 02 — Financial Snapshot</div>
+      <div className="card-title">Your Financial Picture</div>
+      <div className="card-desc">Approximate figures are fine at this stage. Detailed financials are requested only after approval.</div>
+    </div>
+    <div className="card-body">
+      <F num="Q5" label="Annual revenue — last 12 months (EGP)" hint="Enter the full amount, e.g. 3500000 for EGP 3.5M">
+        <input type="number" value={d.q5||''} onChange={s('q5')} placeholder="e.g. 3500000" min="0"/>
+      </F>
+      <F num="Q6" label="Is your business currently profitable?">
+        <Radio val={d.q6} onChange={r('q6')} opts={[{v:'yes',l:'Yes'},{v:'no',l:'No'}]}/>
+      </F>
+      <F num="Q7" label="Approximate net profit margin (%)" hint="Enter a whole number, e.g. 18 for 18%">
+        <input type="number" value={d.q7||''} onChange={s('q7')} placeholder="e.g. 18" min="0" max="100"/>
+      </F>
+      <F num="Q8" label="Revenue trend over the past 2 years">
+        <Radio val={d.q8} onChange={r('q8')} opts={[{v:'growing',l:'Growing'},{v:'stable',l:'Stable'},{v:'declining',l:'Declining'}]}/>
+      </F>
+      <F num="Q9" label="Do you have audited or reviewed financial statements?">
+        <Radio val={d.q9} onChange={r('q9')} opts={[{v:'audited',l:'Yes — Audited'},{v:'reviewed',l:'Accountant-reviewed'},{v:'no',l:'No'}]}/>
+      </F>
+    </div>
+    <div className="card-foot">
+      <button className="btn btn-back" onClick={onBack}>← Back</button>
+      <Dots step={2} total={6}/>
+      <button className="btn btn-next" onClick={onNext}>Continue →</button>
+    </div>
+  </>;
+};
+
+const S3 = ({d,sd,onBack,onNext}) => {
+  const s = k => e => sd(p=>({...p,[k]:e.target.value}));
+  const r = k => v => sd(p=>({...p,[k]:v}));
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Section 03 — The Ask</div>
+      <div className="card-title">What Are You Looking For?</div>
+      <div className="card-desc">Be specific. Clarity here is one of the strongest positive signals to an investor.</div>
+    </div>
+    <div className="card-body">
+      <F num="Q10" label="How much capital are you seeking? (EGP)" hint="Enter the full amount, e.g. 2000000 for EGP 2M">
+        <input type="number" value={d.q10||''} onChange={s('q10')} placeholder="e.g. 2000000" min="0"/>
+      </F>
+      <F num="Q11" label="What equity percentage are you offering in return?">
+        <Sel val={d.q11} onChange={v=>sd(p=>({...p,q11:v}))} placeholder="Select a range..." opts={[
+          {v:'under-10',  l:'Less than 10%'},
+          {v:'10-20',     l:'10% – 20%'},
+          {v:'20-30',     l:'20% – 30%'},
+          {v:'30-49',     l:'30% – 49%'},
+          {v:'50+',       l:'50% or more'},
+        ]}/>
+      </F>
+      <F num="Q12" label="What will the capital be used for specifically?">
+        <textarea value={d.q12||''} onChange={s('q12')} placeholder="e.g. 60% new machinery, 30% working capital, 10% senior sales hire..."/>
+      </F>
+      <F num="Q13" label="Have you raised external investment before?">
+        <Radio val={d.q13} onChange={r('q13')} opts={[{v:'yes',l:'Yes'},{v:'no',l:'No — first time'}]}/>
+      </F>
+    </div>
+    <div className="card-foot">
+      <button className="btn btn-back" onClick={onBack}>← Back</button>
+      <Dots step={3} total={6}/>
+      <button className="btn btn-next" onClick={onNext}>Continue →</button>
+    </div>
+  </>;
+};
+
+const S4 = ({d,sd,onBack,onNext}) => {
+  const s = k => e => sd(p=>({...p,[k]:e.target.value}));
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Section 04 — Founder & Owner</div>
+      <div className="card-title">The Person Behind the Business</div>
+      <div className="card-desc">Investors invest in people as much as businesses. Help us understand your background.</div>
+    </div>
+    <div className="card-body">
+      <F num="Q14" label="Owner(s) name and professional background">
+        <textarea value={d.q14||''} onChange={s('q14')} placeholder="e.g. Name, years of experience, industry background..."/>
+      </F>
+      <F num="Q15" label="How many years have you been running this business?">
+        <Sel val={d.q15} onChange={v=>sd(p=>({...p,q15:v}))} placeholder="Select a range..." opts={[
+          {v:'under-1',  l:'Less than 1 year'},
+          {v:'1-2',      l:'1 – 2 years'},
+          {v:'2-4',      l:'2 – 4 years'},
+          {v:'4-7',      l:'4 – 7 years'},
+          {v:'over-7',   l:'Over 7 years'},
+        ]}/>
+      </F>
+      <F num="Q16" label="Please attach your CV (or lead founder's CV)">
+        <div className="file-zone">
+          <input type="file" accept=".pdf,.doc,.docx" onChange={e=>{const f=e.target.files[0];if(f)sd(p=>({...p,cvName:f.name}));}}/>
+          <div className="fz-icon">📎</div>
+          <div className="fz-main"><strong>Click to upload</strong></div>
+          <div className="fz-sub">PDF, DOC, or DOCX — max 5MB</div>
+          {d.cvName && <div className="fz-chosen">✓ {d.cvName}</div>}
+        </div>
+      </F>
+    </div>
+    <div className="card-foot">
+      <button className="btn btn-back" onClick={onBack}>← Back</button>
+      <Dots step={4} total={6}/>
+      <button className="btn btn-next" onClick={onNext}>Continue →</button>
+    </div>
+  </>;
+};
+
+const S5 = ({d,sd,onBack,onSubmit,loading}) => {
+  const s = k => e => sd(p=>({...p,[k]:e.target.value}));
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Section 05 — Open Questions</div>
+      <div className="card-title">In Your Own Words</div>
+      <div className="card-desc">These three questions carry the most weight. Honest and specific answers are valued far more than polished ones.</div>
+    </div>
+    <div className="card-body">
+      <F num="Q18" label="What is your main competitive advantage?" hint="What makes your business hard to replicate? Think proprietary relationships, processes, brand, location, exclusive contracts.">
+        <textarea value={d.q18||''} onChange={s('q18')} placeholder="e.g. We hold the only exclusive distribution agreement for..."/>
+      </F>
+      <F num="Q19" label="What is the biggest risk in your business right now?" hint="Be honest — investors respect founders who understand their own vulnerabilities.">
+        <textarea value={d.q19||''} onChange={s('q19')} placeholder="e.g. Our revenue is currently concentrated in two large clients..."/>
+      </F>
+      <F num="Q20" label="Why are you seeking investment now?" hint="What has changed, or what opportunity exists, that makes this the right moment?">
+        <textarea value={d.q20||''} onChange={s('q20')} placeholder="e.g. We have secured a new contract that requires us to scale production by..."/>
+      </F>
+    </div>
+    <div className="card-foot">
+      <button className="btn btn-back" onClick={onBack}>← Back</button>
+      <Dots step={5} total={6}/>
+      <button className="btn btn-submit" onClick={onSubmit} disabled={loading}>
+        {loading ? 'Submitting...' : 'Submit Application'}
+      </button>
+    </div>
+  </>;
+};
+
+const SResults = ({result}) => {
+  if (!result) return <>
+    <div className="card-head">
+      <div className="eyebrow">Tamweel — Screening Result</div>
+      <div className="card-title">Analyzing Your Submission</div>
+    </div>
+    <div className="card-body">
+      <div className="loading-wrap">
+        <div className="spinner"/>
+        <div className="spin-label">Analyzing submission...</div>
+      </div>
+    </div>
+  </>;
+
+  const v = verdict(result.total);
+  const ScoreRows = ({rows}) => rows.map((r,i)=>(
+    <div key={i} className="score-row">
+      <span className="sr-label">{r.l}</span>
+      <div className="sr-track"><div className="sr-fill" style={{width:`${(r.s/r.m)*100}%`}}/></div>
+      <span className="sr-val">{r.s}/{r.m}</span>
+    </div>
+  ));
+
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Tamweel — Screening Result</div>
+      <div className="card-title">Preliminary Assessment</div>
+      <div className="card-desc">Internal review only — not shared with the applicant.</div>
+    </div>
+    <div className="card-body">
+      <div className="result-hero">
+        <div className="result-score">{result.total}</div>
+        <div className="result-denom">out of 100</div>
+        <div className={`verdict ${v.c}`}>{v.l}</div>
+      </div>
+
+      <div className="section-label">Financial Snapshot</div>
+      <ScoreRows rows={[
+        {l:'Annual Revenue',s:result.s5,m:10},
+        {l:'Profitability',s:result.s6,m:5},
+        {l:'Net Profit Margin',s:result.s7,m:10},
+        {l:'Revenue Trend',s:result.s8,m:10},
+      ]}/>
+      <hr className="divider"/>
+
+      <div className="section-label">The Ask & Founder</div>
+      <ScoreRows rows={[
+        {l:'Capital Range',s:result.s10,m:5},
+        {l:'Equity Fairness (AI)',s:result.ai.q11,m:10},
+        {l:'Use of Funds',s:result.s12,m:10},
+        {l:'Founder Quality (AI)',s:result.ai.q14,m:15},
+        {l:'Years Running',s:result.s15,m:5},
+      ]}/>
+      <hr className="divider"/>
+
+      <div className="section-label">Open Questions</div>
+      <ScoreRows rows={[
+        {l:'Competitive Advantage (AI)',s:result.ai.q18,m:10},
+        {l:'Risk Awareness (AI)',s:result.ai.q19,m:8},
+        {l:'Why Now (AI)',s:result.ai.q20,m:7},
+      ]}/>
+
+      <div className="ai-panel">
+        <div className="ai-panel-label">▸ AI Assessment for Tamweel Team</div>
+        <div className="ai-panel-text" dangerouslySetInnerHTML={{__html:result.ai.assessment.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}}/>
+      </div>
+    </div>
+  </>;
+};
+
+/* ── App ── */
+function App() {
+  const [step, setStep]   = useState(0);
+  const [data, setData]   = useState({});
+  const [loading, setLoading] = useState(false);
+  const [result, setResult]   = useState(null);
+
+  const next = () => setStep(s => s+1);
+  const back = () => setStep(s => s-1);
+  const pct  = step >= 6 ? 100 : Math.round((step/6)*100);
+
+  const submit = async () => {
+    setLoading(true);
+    setStep(6);
+
+    const s5=sQ5(data.q5), s6=sQ6(data.q6), s7=sQ7(data.q7), s8=sQ8(data.q8);
+    const s10=sQ10(data.q10), s12=sQ12(data.q12), s15=sQ15(data.q15);
+    const sectorLabel  = data.q2==='Other' ? (data.q2other||'Other') : (data.q2||'');
+    const revenueLabel = data.q5 ? `EGP ${Number(data.q5).toLocaleString()}` : '';
+    const marginLabel  = data.q7 ? `${data.q7}%` : '';
+    const capitalLabel = data.q10 ? `EGP ${Number(data.q10).toLocaleString()}` : '';
+    const equityLabel  = {'under-10':'Under 10%','10-20':'10–20%','20-30':'20–30%','30-49':'30–49%','50+':'50%+'}[data.q11]||data.q11;
+    const yearsLabel   = {'under-1':'Under 1 year','1-2':'1–2 years','2-4':'2–4 years','4-7':'4–7 years','over-7':'Over 7 years'}[data.q15]||data.q15;
+    const iv = data.q10&&data.q11 ? '(range-based — see equity and capital labels)' : null;
+
+    const prompt = `You are a senior investment analyst at Tamweel, an Egyptian equity investment platform connecting SMEs with investors. Analyze this application strictly and realistically for the Egyptian SME market.
+
+BUSINESS APPLICATION:
+Business: ${data.q1} | Sector: ${sectorLabel}
+Location: ${data.q3} | Employees: ${data.q4}
+Revenue (EGP): ${revenueLabel} | Profitable: ${data.q6} | Margin: ${marginLabel}
+Trend: ${data.q8} | Financials: ${data.q9}
+Capital Sought: ${capitalLabel} | Equity Offered: ${equityLabel}
+Use of Funds: ${data.q12} | Prior Investment: ${data.q13}
+Founder: ${data.q14} | Years Running: ${yearsLabel}
+Competitive Advantage: ${data.q18}
+Biggest Risk: ${data.q19}
+Why Now: ${data.q20}
+
+Score strictly:
+1. EQUITY FAIRNESS (q11): 1-10 — Is the equity % fair vs capital sought and implied valuation for an Egyptian SME of this revenue size?
+2. FOUNDER QUALITY (q14): 1-15 — Rate experience, industry knowledge, seniority, credibility.
+3. COMPETITIVE ADVANTAGE (q18): 1-10 — Vague=1-3, Clear=4-6, Specific & defensible=7-10.
+4. RISK AWARENESS (q19): 1-8 — Dismissive=1-3, Partial=4-5, Honest & specific=6-8.
+5. WHY NOW (q20): 1-7 — Unconvincing=1-3, Reasonable=4-5, Compelling=6-7.
+6. ASSESSMENT: 3-4 sentences for the Tamweel team. Mention strongest signal, biggest concern, overall recommendation stance.
+
+Respond ONLY in valid JSON with no markdown or extra text:
+{"q11":0,"q14":0,"q18":0,"q19":0,"q20":0,"assessment":""}`;
+
+    let ai = {q11:5,q14:8,q18:5,q19:4,q20:4,assessment:'AI assessment unavailable — please score these fields manually.'};
+
+    try {
+      const res  = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      });
+      const json = await res.json();
+      const raw  = json.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+      ai = JSON.parse(raw);
+    } catch(e){ console.error(e); }
+
+    const total = s5+s6+s7+s8+s10+ai.q11+s12+ai.q14+s15+ai.q18+ai.q19+ai.q20;
+    setResult({total,s5,s6,s7,s8,s10,s12,s15,ai});
+    setLoading(false);
+  };
+
+  const label = step===6 ? 'Results' : `Step ${step+1} of 6`;
+
+  return (
+    <div>
+      <div className="topbar">
+        <div className="logo">Tamweel <span>Investment Screener</span></div>
+        <div className="step-counter">{label}</div>
+      </div>
+      <div className="progress-wrap">
+        <div className="progress-bar" style={{width:`${pct}%`}}/>
+      </div>
+      <div className="page-wrap">
+        <div className="card">
+          {step===0 && <S0 d={data} sd={setData} onNext={next}/>}
+          {step===1 && <S1 d={data} sd={setData} onBack={back} onNext={next}/>}
+          {step===2 && <S2 d={data} sd={setData} onBack={back} onNext={next}/>}
+          {step===3 && <S3 d={data} sd={setData} onBack={back} onNext={next}/>}
+          {step===4 && <S4 d={data} sd={setData} onBack={back} onNext={next}/>}
+          {step===5 && <S5 d={data} sd={setData} onBack={back} onSubmit={submit} loading={loading}/>}
+          {step===6 && <SResults result={result}/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>

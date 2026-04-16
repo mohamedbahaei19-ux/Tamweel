@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tamweel — Document Submission</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #F7F5F3;
+  color: #1C1C1C;
+  min-height: 100vh;
+}
+
+:root {
+  --wine: #6B1D2E;
+  --wine-dark: #4E1520;
+  --wine-pale: #F9F0F2;
+  --wine-border: #E8C8CE;
+  --white: #FFFFFF;
+  --off: #F7F5F3;
+  --border: #E2DDD8;
+  --text: #1C1C1C;
+  --muted: #6B6B6B;
+  --dim: #A0A0A0;
+}
+
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 20px; font-weight: 700; color: var(--wine); letter-spacing: -0.02em; }
+.logo span { font-weight: 300; color: var(--muted); font-size: 13px; margin-left: 10px; letter-spacing: 0.05em; }
+.step-counter { font-size: 12px; font-weight: 500; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; }
+
+.progress-wrap { height: 2px; background: var(--border); }
+.progress-bar  { height: 100%; background: var(--wine); transition: width 0.4s ease; }
+
+.page-wrap {
+  min-height: calc(100vh - 62px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 56px 20px 80px;
+}
+
+.card {
+  background: var(--white); width: 100%; max-width: 620px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+}
+.card-head { padding: 36px 44px 30px; border-bottom: 1px solid var(--border); }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--wine); margin-bottom: 10px; }
+.card-title { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1.25; letter-spacing: -0.02em; }
+.card-desc { margin-top: 8px; font-size: 14px; color: var(--muted); line-height: 1.65; }
+.card-body { padding: 36px 44px; }
+.card-foot {
+  padding: 20px 44px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: #FAFAF8;
+}
+
+.dots { display: flex; gap: 5px; align-items: center; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: all 0.25s; }
+.dot.done { background: var(--wine-border); }
+.dot.active { background: var(--wine); width: 18px; border-radius: 4px; }
+
+.btn { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; padding: 11px 28px; border: none; cursor: pointer; transition: all 0.18s; line-height: 1; }
+.btn-next { background: var(--wine); color: var(--white); }
+.btn-next:hover { background: var(--wine-dark); }
+.btn-submit { background: var(--wine); color: var(--white); }
+.btn-submit:hover { background: var(--wine-dark); }
+.btn-restart { background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 11px 28px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.18s; }
+.btn-restart:hover { border-color: var(--wine); color: var(--wine); }
+
+.approval-banner { background: var(--wine); padding: 20px 24px; display: flex; align-items: flex-start; gap: 14px; margin-bottom: 28px; }
+.approval-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.approval-label { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+.approval-name  { font-size: 16px; font-weight: 700; color: white; letter-spacing: -0.01em; }
+.approval-meta  { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; font-weight: 300; }
+
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 28px; }
+.summary-cell { background: var(--white); padding: 14px 16px; }
+.summary-cell-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+.summary-cell-val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--wine); margin-bottom: 12px; }
+
+.doc-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.doc-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); background: var(--off); font-size: 13px; color: var(--muted); }
+.doc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wine-border); flex-shrink: 0; }
+
+.file-zone { border: 1px dashed var(--border); background: var(--off); padding: 28px 24px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 16px; }
+.file-zone:hover, .file-zone.drag { border-color: var(--wine); background: var(--wine-pale); }
+.fz-icon { font-size: 22px; margin-bottom: 8px; }
+.fz-main { font-size: 13px; color: var(--muted); }
+.fz-main strong { color: var(--wine); font-weight: 600; }
+.fz-sub { font-size: 11px; color: var(--dim); margin-top: 3px; }
+
+.file-items { display: flex; flex-direction: column; gap: 6px; }
+.file-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; background: var(--wine-pale); border: 1px solid var(--wine-border); font-size: 12px; }
+.file-item-name { font-weight: 500; color: var(--wine-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 340px; }
+.file-remove { cursor: pointer; color: var(--wine); font-size: 15px; flex-shrink: 0; margin-left: 10px; opacity: 0.6; }
+.file-remove:hover { opacity: 1; }
+
+.note { background: var(--wine-pale); border: 1px solid var(--wine-border); border-left: 3px solid var(--wine); padding: 14px 16px; font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 24px; }
+.note strong { color: var(--text); font-weight: 600; }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+.what-happens { display: flex; flex-direction: column; border: 1px solid var(--border); margin-bottom: 28px; }
+.wh-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.wh-item:last-child { border-bottom: none; }
+.wh-num { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--wine); background: var(--wine-pale); border: 1px solid var(--wine-border); padding: 2px 8px; flex-shrink: 0; margin-top: 2px; }
+.wh-text { font-size: 13px; color: var(--muted); line-height: 1.65; }
+.wh-text strong { color: var(--text); font-weight: 600; }
+
+@media (max-width: 600px) {
+  .topbar { padding: 0 20px; }
+  .card-head, .card-body, .card-foot { padding-left: 24px; padding-right: 24px; }
+  .summary-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef } = React;
+
+/*
+  In production, SCREENER is populated from your backend session after
+  the founder completes the screener. The key change here is that
+  revenue, capital, and margin are now exact numbers entered by the
+  founder (not ranges), so they display as formatted EGP figures.
+*/
+const SCREENER = {
+  bizName:  'Nile Foods LLC',
+  sector:   'Food & Beverage',
+  location: 'Cairo',
+  employees: 22,
+  revenue:  4200000,   // exact EGP figure from number input
+  margin:   14,        // exact % from number input
+  capital:  5000000,   // exact EGP figure from number input
+  equity:   '20% – 30%',
+  score:    74,
+  verdict:  'Conditional Proceed',
+};
+
+/* Format EGP numbers cleanly */
+const egp = n => `EGP ${Number(n).toLocaleString('en-EG')}`;
+const pct = n => `${n}%`;
+
+const Dots = ({step, total}) => (
+  <div className="dots">
+    {Array.from({length:total}).map((_,i) => (
+      <div key={i} className={`dot${i<step?' done':i===step?' active':''}`}/>
+    ))}
+  </div>
+);
+
+/* ── Screen 1: Confirm ── */
+const SConfirm = ({onNext}) => {
+  const d = SCREENER;
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Step 01 — Confirm Details</div>
+      <div className="card-title">Application Approved</div>
+      <div className="card-desc">Your preliminary screening has been reviewed. Please confirm your details before uploading documents.</div>
+    </div>
+    <div className="card-body">
+      <div className="approval-banner">
+        <div className="approval-icon">✓</div>
+        <div>
+          <div className="approval-label">Screener Outcome</div>
+          <div className="approval-name">{d.bizName}</div>
+          <div className="approval-meta">{d.verdict} · Score {d.score}/100</div>
+        </div>
+      </div>
+
+      <div className="section-label">Your Submitted Details</div>
+      <div className="summary-grid">
+        <div className="summary-cell"><div className="summary-cell-label">Sector</div><div className="summary-cell-val">{d.sector}</div></div>
+        <div className="summary-cell"><div className="summary-cell-label">Location</div><div className="summary-cell-val">{d.location}</div></div>
+        <div className="summary-cell"><div className="summary-cell-label">Employees</div><div className="summary-cell-val">{d.employees} full-time</div></div>
+        <div className="summary-cell"><div className="summary-cell-label">Net Profit Margin</div><div className="summary-cell-val">{pct(d.margin)}</div></div>
+        <div className="summary-cell"><div className="summary-cell-label">Annual Revenue</div><div className="summary-cell-val">{egp(d.revenue)}</div></div>
+        <div className="summary-cell"><div className="summary-cell-label">Capital Sought</div><div className="summary-cell-val">{egp(d.capital)}</div></div>
+        <div className="summary-cell"><div className="summary-cell-label">Equity Offered</div><div className="summary-cell-val">{d.equity}</div></div>
+      </div>
+
+      <div className="note">
+        <strong>Next step:</strong> Upload your supporting documents. Our model will use everything from your screener together with your documents to generate your investment memo — no repeated questions.
+      </div>
+    </div>
+    <div className="card-foot">
+      <Dots step={0} total={2}/>
+      <button className="btn btn-next" onClick={onNext}>Upload Documents →</button>
+    </div>
+  </>;
+};
+
+/* ── Screen 2: Upload ── */
+const SUpload = ({onSubmit}) => {
+  const [files, setFiles] = useState([]);
+  const [drag,  setDrag]  = useState(false);
+  const inputRef = useRef();
+
+  const addFiles = fs => {
+    const arr = Array.from(fs);
+    setFiles(prev => {
+      const names = new Set(prev.map(f => f.name));
+      return [...prev, ...arr.filter(f => !names.has(f.name))];
+    });
+  };
+  const remove = name => setFiles(prev => prev.filter(f => f.name !== name));
+
+  const docTypes = [
+    'Commercial registration certificate',
+    'Tax registration card',
+    'Bank statements — last 6 months',
+    'Financial statements or accountant report',
+    'Sales records or invoices',
+    'Existing customer contracts',
+    'Any other relevant supporting documents',
+  ];
+
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Step 02 — Documents</div>
+      <div className="card-title">Upload Your Documents</div>
+      <div className="card-desc">Upload whatever you have. Don't worry if some are missing — we will follow up if we need anything else.</div>
+    </div>
+    <div className="card-body">
+      <div className="section-label">Suggested Documents</div>
+      <div className="doc-list">
+        {docTypes.map((doc, i) => (
+          <div className="doc-item" key={i}><div className="doc-dot"/>{doc}</div>
+        ))}
+      </div>
+
+      <div className="divider"/>
+
+      <div
+        className={`file-zone${drag ? ' drag' : ''}`}
+        onDragOver={e => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={e => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
+        onClick={() => inputRef.current.click()}
+      >
+        <input
+          ref={inputRef} type="file" multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+          style={{display:'none'}}
+          onChange={e => addFiles(e.target.files)}
+        />
+        <div className="fz-icon">📎</div>
+        <div className="fz-main"><strong>Click to upload</strong> or drag & drop</div>
+        <div className="fz-sub">PDF, Word, Excel, or images · Max 10MB per file</div>
+      </div>
+
+      {files.length > 0 && (
+        <div className="file-items">
+          {files.map(f => (
+            <div className="file-item" key={f.name}>
+              <span className="file-item-name">📄 {f.name}</span>
+              <span className="file-remove" onClick={() => remove(f.name)}>×</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+    <div className="card-foot">
+      <Dots step={1} total={2}/>
+      <button className="btn btn-submit" onClick={() => onSubmit(files)}>
+        Submit Documents →
+      </button>
+    </div>
+  </>;
+};
+
+/* ── Screen 3: Submitted ── */
+const SSubmitted = ({fileCount}) => {
+  const d = SCREENER;
+  const steps = [
+    { n:'01', title:'Documents received',            desc:'Your uploaded documents have been securely received by the Tamweel team.' },
+    { n:'02', title:'AI analysis & memo generation', desc:'Our model will analyse your screener responses and documents and generate your investment memo and supporting materials.' },
+    { n:'03', title:'Senior advisor review',          desc:'The memo is reviewed and signed off by our senior advisor before being shared with any investor.' },
+    { n:'04', title:'You will be notified by email',  desc:'Once the memo is finalised, we will contact you at the email address you provided. This typically takes 3–5 business days.' },
+  ];
+
+  return <>
+    <div className="card-head">
+      <div className="eyebrow">Submission Complete</div>
+      <div className="card-title">You're All Done</div>
+      <div className="card-desc">Thank you. Your submission for <strong>{d.bizName}</strong> is now with the Tamweel team.</div>
+    </div>
+    <div className="card-body">
+
+      <div className="approval-banner">
+        <div className="approval-icon">✓</div>
+        <div>
+          <div className="approval-label">Successfully Submitted</div>
+          <div className="approval-name">{d.bizName}</div>
+          <div className="approval-meta">
+            {fileCount > 0 ? `${fileCount} document${fileCount !== 1 ? 's' : ''} uploaded` : 'No documents uploaded'} · Pending analysis
+          </div>
+        </div>
+      </div>
+
+      <div className="section-label">What Happens Next</div>
+      <div className="what-happens">
+        {steps.map((s, i) => (
+          <div className="wh-item" key={i}>
+            <div className="wh-num">{s.n}</div>
+            <div className="wh-text"><strong>{s.title}</strong><br/>{s.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="note">
+        If we need any additional information or documents from you, we will reach out by email before proceeding. You do not need to take any further action at this stage.
+      </div>
+
+      <button className="btn-restart" onClick={() => window.location.reload()}>← Submit Another Business</button>
+    </div>
+  </>;
+};
+
+/* ── App ── */
+function App() {
+  const [screen,    setScreen]    = useState(0);
+  const [fileCount, setFileCount] = useState(0);
+
+  const pct   = screen === 0 ? 33 : screen === 1 ? 66 : 100;
+  const label = screen === 0 ? 'Step 1 of 2' : screen === 1 ? 'Step 2 of 2' : 'Complete';
+
+  return (
+    <div>
+      <div className="topbar">
+        <div className="logo">Tamweel <span>Document Submission</span></div>
+        <div className="step-counter">{label}</div>
+      </div>
+      <div className="progress-wrap">
+        <div className="progress-bar" style={{width:`${pct}%`}}/>
+      </div>
+      <div className="page-wrap">
+        <div className="card">
+          {screen === 0 && <SConfirm onNext={() => setScreen(1)}/>}
+          {screen === 1 && <SUpload  onSubmit={files => { setFileCount(files.length); setScreen(2); }}/>}
+          {screen === 2 && <SSubmitted fileCount={fileCount}/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>
