@@ -140,17 +140,21 @@ const { useState, useRef } = React;
   revenue, capital, and margin are now exact numbers entered by the
   founder (not ranges), so they display as formatted EGP figures.
 */
+// Read screener data from URL params (passed by team when sending the link)
+const _p = new URLSearchParams(window.location.search);
 const SCREENER = {
-  bizName:  'Nile Foods LLC',
-  sector:   'Food & Beverage',
-  location: 'Cairo',
-  employees: 22,
-  revenue:  4200000,   // exact EGP figure from number input
-  margin:   14,        // exact % from number input
-  capital:  5000000,   // exact EGP figure from number input
-  equity:   '20% – 30%',
-  score:    74,
-  verdict:  'Conditional Proceed',
+  bizName:   _p.get('biz')      || 'Nile Foods LLC',
+  sector:    _p.get('sector')   || 'Food & Beverage',
+  location:  _p.get('loc')      || 'Cairo',
+  employees: Number(_p.get('emp')) || 22,
+  revenue:   Number(_p.get('rev')) || 4200000,
+  margin:    Number(_p.get('margin')) || 14,
+  capital:   Number(_p.get('cap')) || 5000000,
+  equity:    _p.get('equity')   || '20% – 30%',
+  score:     Number(_p.get('score')) || 74,
+  verdict:   _p.get('verdict')  || 'Conditional Proceed',
+  founderName:  _p.get('name')  || 'Ahmed Hassan',
+  founderEmail: _p.get('email') || 'ahmed@nilefoods.com',
 };
 
 /* Format EGP numbers cleanly */
@@ -341,6 +345,38 @@ function App() {
   const pct   = screen === 0 ? 33 : screen === 1 ? 66 : 100;
   const label = screen === 0 ? 'Step 1 of 2' : screen === 1 ? 'Step 2 of 2' : 'Complete';
 
+  const handleDocSubmit = async (files) => {
+    setFileCount(files.length);
+    setScreen(2);
+    // Convert files to base64 and send to Make.com webhook
+    try {
+      const toBase64 = f => new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(f);
+      });
+      const fileData = await Promise.all(files.map(async f => ({
+        name: f.name, type: f.type, size: f.size,
+        content: await toBase64(f)
+      })));
+      await fetch('https://hook.eu1.make.com/3e3ccdsuwv9xitrdqdcsfft9aintcf3i', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'documents_submitted',
+          bizName:      SCREENER.bizName,
+          founderName:  SCREENER.founderName,
+          founderEmail: SCREENER.founderEmail,
+          score:        SCREENER.score,
+          verdict:      SCREENER.verdict,
+          fileCount:    files.length,
+          files:        fileData,
+        })
+      });
+    } catch(e) { console.error('Webhook error:', e); }
+  };
+
   return (
     <div>
       <div className="topbar">
@@ -353,7 +389,7 @@ function App() {
       <div className="page-wrap">
         <div className="card">
           {screen === 0 && <SConfirm onNext={() => setScreen(1)}/>}
-          {screen === 1 && <SUpload  onSubmit={files => { setFileCount(files.length); setScreen(2); }}/>}
+          {screen === 1 && <SUpload  onSubmit={handleDocSubmit}/>}
           {screen === 2 && <SSubmitted fileCount={fileCount}/>}
         </div>
       </div>
