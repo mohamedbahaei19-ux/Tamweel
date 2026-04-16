@@ -831,6 +831,8 @@ const SResults = ({result}) => {
         <div className="ai-panel-text" dangerouslySetInnerHTML={{__html:result.ai.assessment.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}}/>
       </div>
     </div>
+  
+      {(v.c==='v-strong'||v.c==='v-cond')&&(<div className="card-foot" style={{justifyContent:'flex-end'}}><a href={'documents.html?score='+result.total+'&biz='+encodeURIComponent(result.bizName||'')} className="btn btn-next" style={{textDecoration:'none'}}>Proceed to Document Portal →</a></div>)}
   </>;
 };
 
@@ -901,6 +903,8 @@ Respond ONLY in valid JSON with no markdown or extra text:
     } catch(e){ console.error(e); }
 
     const total = s5+s6+s7+s8+s10+ai.q11+s12+ai.q14+s15+ai.q18+ai.q19+ai.q20;
+        setResult({total,s5,s6,s7,s8,s10,s12,s15,ai,bizName:data.q1});
+        setLoading(false);
 
    // Send to Make webhook (after AI scoring so we have the full score)
 await fetch('https://hook.eu1.make.com/3e3ccdsuwv9xitrdqdcsfft9aintcf3i', {
