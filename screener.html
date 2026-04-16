@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalon/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -835,7 +835,9 @@ const SResults = ({result}) => {
 };
 
 /* ── App ── */
-function App() {
+    const ANTHROPIC_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Anthropic API key
+
+    function App() {
   const [step, setStep]   = useState(0);
   const [data, setData]   = useState({});
   const [loading, setLoading] = useState(false);
@@ -886,7 +888,21 @@ Respond ONLY in valid JSON with no markdown or extra text:
 
     let ai = {q11:5,q14:8,q18:5,q19:4,q20:4,assessment:'AI assessment unavailable — please score these fields manually.'};
 
-   // Send to Make webhook
+   // Call Claude API for AI scoring
+    try {
+      const res  = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key': ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      });
+      const json = await res.json();
+      const raw  = json.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+      ai = JSON.parse(raw);
+    } catch(e){ console.error(e); }
+
+    const total = s5+s6+s7+s8+s10+ai.q11+s12+ai.q14+s15+ai.q18+ai.q19+ai.q20;
+
+   // Send to Make webhook (after AI scoring so we have the full score)
 await fetch('https://hook.eu1.make.com/3e3ccdsuwv9xitrdqdcsfft9aintcf3i', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -909,25 +925,11 @@ await fetch('https://hook.eu1.make.com/3e3ccdsuwv9xitrdqdcsfft9aintcf3i', {
     advantage: data.q18,
     risk: data.q19,
     founderEmail: data.email,
-    screenerScore: s5+s6+s7+s8+s10+s12+s15,
+    screenerScore: total,
     screenerVerdict: '',
+    aiAssessment: ai.assessment,
   })
 });
-    try {
-      const res  = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-      });
-      const json = await res.json();
-      const raw  = json.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-      ai = JSON.parse(raw);
-    } catch(e){ console.error(e); }
-
-    const total = s5+s6+s7+s8+s10+ai.q11+s12+ai.q14+s15+ai.q18+ai.q19+ai.q20;
-    setResult({total,s5,s6,s7,s8,s10,s12,s15,ai});
-    setLoading(false);
-  };
 
   const label = step===6 ? 'Results' : `Step ${step+1} of 6`;
 
